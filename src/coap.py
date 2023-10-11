@@ -4,6 +4,7 @@ from aiocoap.resource import Resource
 from aiocoap.numbers.codes import Code
 
 
+''' Classe de teste de um GET no protocolo COAP '''
 class WhoAmI(Resource):
     async def render_get(self, request):
         text = ["Used protocol: %s." % request.remote.scheme]
@@ -19,6 +20,9 @@ class WhoAmI(Resource):
         return Message(content_format=0,
                                payload="\n".join(text).encode('utf8'))
 
+''' Implementação do endpoint "humidity" do protocolo coap
+    Recebe dados de temperatura e humidade (separados por espaço) e salva na base de dados (MySQL)
+'''
 class HumidityResource(Resource):
     def __init__(self):
         super().__init__()
@@ -28,18 +32,24 @@ class HumidityResource(Resource):
 
     def set_content(self, content):
         self.content = content
-        # while len(self.content) <= 1024:
-        #     self.content = self.content + b"0123456789\n"
 
+    ''' Método get para pegar o último resultado gravado'''
     async def render_get(self, request):
         return Message(payload=self.content)
     
+    ''' Método PUT para receber dados e salvar na database '''
     async def render_put(self, request):
-        print('PUT payload: %s' % request.payload)
+        ''' O payload vem em bytes
+            Usamos o decode para converter para string
+        '''
         payload=request.payload.decode()
+        ''' O payload é composto por temperatura e humidade separados por whitespace
+            Exemplo, b'12 50'
+            O split é justamente para os valores em duas variáveis diferentes
+        '''
         temperature=payload.split(" ")[0]
         humidity=payload.split(" ")[1]
         self.set_content(request.payload)
+        ''' Salva na base de dados'''
         save_data(int(temperature),int(humidity))
         return Message(code=Code.CHANGED, payload=self.content)
-    
