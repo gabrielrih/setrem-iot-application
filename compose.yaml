@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.app
+    depends_on:
+      - mysql
+    ports:
+      - "5683:5683/udp"
+  mysql:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.mysql
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./sql/init.sql:/data/application/init.sql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - 3306:3306
+  grafana:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.grafana
+    volumes:
+      - ./grafana:/var/lib/grafana:rw
+    environment:
+      - GF_DATABASE_HOST=mysql:3306
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=root
+      - GF_DATABASE_PASSWORD=1234
+      - GF_DATABASE_TYPE=mysql
+      - GF_DATABASE_MAX_OPEN_CONN=300
+    ports:
+      - "3000:3000"
+    depends_on: ["mysql"]
