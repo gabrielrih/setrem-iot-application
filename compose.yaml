@@ -34,4 +34,5 @@ services:
       - GF_DATABASE_MAX_OPEN_CONN=300
     ports:
       - "3000:3000"
-    depends_on: ["mysql"]
+    depends_on:
+      - mysql
